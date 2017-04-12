@@ -62,23 +62,63 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 
+%1.3 Feedforward and cost function
+a1 = [ones(m,1) X];  %a1 5000x401
+z2 = a1 * Theta1';   %z2 5000x25
+a2 = sigmoid(z2);    %a2 5000x25
+
+a2 = [ones(m,1) a2]; %a2 5000x26
+z3 = a2 * Theta2';   %z3 5000x10
+a3 = sigmoid(z3);    %a3 5000x10
+
+y_labels = eye(num_labels)(y,:);
 
 
+J = (sum(sum(-y_labels .* log(a3)-(1-y_labels) .* log(1-a3))))/m;
 
 
+Theta1Nobias = Theta1(:,2:end);
+Theta2Nobias = Theta2(:,2:end);
+
+%1.4 Regularized cost function
+J = J + (lambda/(2*m)) * (sum(sum(Theta1Nobias .* Theta1Nobias)) + sum(sum(Theta2Nobias .* Theta2Nobias)));
 
 
+%2.3 Backpropagation
 
+Delta1 = zeros(size(Theta1));
+Delta2 = zeros(size(Theta2));
+for t=1:m
 
+%1
+a1 = [1; X(t,:)']; %a1 401x1
+z2 = Theta1 * a1;  %z2 25x1 = 25x401  401x1 
 
+a2 = sigmoid(z2);
 
+a2 = [1;a2];  %a2 26x1
+z3 = Theta2 * a2; %z3 10x1 = 10x26 26x1
+a3 = sigmoid(z3);
 
+%2
+delta3 = a3 - y_labels(t,:)';% 10x1
 
+%3
+delta2 = Theta2Nobias' * delta3 .* sigmoidGradient(z2);  %25x1 = 10x25 10x1  
 
+%4
+Delta2 = Delta2 + delta3 * a2';  %  10x1 1x26  
+Delta1 = Delta1 + delta2 * a1';  %  25x1 1x401
 
+endfor
 
+%5
+Theta1_grad = Delta1/m;
+Theta2_grad = Delta2/m;
 
-
+%2.5 Regularized Neural Networks
+Theta1_grad(:,2:end) += (lambda/m) * Theta1Nobias;
+Theta2_grad(:,2:end) += (lambda/m) * Theta2Nobias;
 
 % -------------------------------------------------------------
 
